@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Shaders",
+    "\\Shaders\\Private",
+    "\\Source",
+    "\\Source\\Flashlight",
+    "\\Source\\Flashlight\\Private",
+    "\\Source\\Flashlight\\Public"
+  ],
+  "SelectedNode": "\\Source\\Flashlight\\Private\\FlashlightSceneViewExtension.cpp",
+  "PreviewInSolutionExplorer": false
+}

@@ -2,10 +2,10 @@
 
 #include "SceneViewExtension.h"
 
-class FFullScreenPassSceneViewExtension : public FSceneViewExtensionBase
+class FFlashlightSceneViewExtension : public FSceneViewExtensionBase
 {
 public:
-	FFullScreenPassSceneViewExtension(const FAutoRegister& AutoRegister);
+	FFlashlightSceneViewExtension(const FAutoRegister& AutoRegister);
 
 	//~ Begin FSceneViewExtensionBase Interface
 	virtual void SetupViewFamily(FSceneViewFamily& InViewFamily) override {};

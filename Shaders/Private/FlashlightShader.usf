@@ -1,0 +1,79 @@
+
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/SceneTexturesCommon.ush"
+//#include "/Engine/Public/ShaderParameters.ush"
+
+
+float Strenght;
+float Brightness;
+float Size;
+float3 Color;
+float Distance;
+int UseDepth;
+int UseTexture;
+int UseBlendFix;
+
+void MainVS(
+	in float4 InPosition : ATTRIBUTE0,
+	in float2 InTexCoord : ATTRIBUTE1,
+	out noperspective float4 OutUVAndScreenPos : TEXCOORD0,
+	out float4 OutPosition : SV_POSITION)
+{
+    DrawRectangle(InPosition, InTexCoord, OutPosition, OutUVAndScreenPos);
+}
+
+float4 MainPS(
+	noperspective float4 UVAndScreenPos : TEXCOORD0
+    //FParameters Parameters
+	) : SV_Target0
+{
+    float uBrightness = 0.0000000000000001f; // 0 - 0.1 but 0.000000000000001f is also quit a lot
+    float uSize = 21.0; // 10 - 1000
+    float uColor = float3(255, 230, 200) / 255.0; // float3(255, 230, 200) / 255.0;
+    float uDistance = 0.5; // 0 - 1
+    
+    float2 uv = UVAndScreenPos.xy;
+    float2 res = View.ViewSizeAndInvSize.xy;
+    float2 coord = uv * res;
+
+    float halo = distance(coord, res * 0.5);
+    float flashlight = uSize - min(halo, uSize);
+    flashlight /= uSize;
+	
+    #if !FLASHLIGHT_NO_TEXTURE
+	// Add some texture to the halo by using some sin lines + reduce intensity
+	// when nearing the center of the halo.
+    float defects = sin(flashlight * 30.0) * 0.5 + 0.5;
+    defects = lerp(defects, 1.0, flashlight * 2.0);
+
+    static const float contrast = 0.125;
+
+    defects = 0.5 * (1.0 - contrast) + defects * contrast;
+    flashlight *= defects * 4.0;
+    #else
+	flashlight *= 2.0;
+    #endif
+
+    #if !FLASHLIGHT_NO_DEPTH
+    float depth = 1.0 - CalcSceneColorAndDepth(uv).w;
+    depth = pow(abs(depth), 1.0 / uDistance);
+    flashlight *= depth;
+    #endif
+
+    float3 colored_flashlight = flashlight * uColor;
+    colored_flashlight *= colored_flashlight * colored_flashlight;
+
+    float3 result = 1.0 + colored_flashlight * uBrightness;
+
+    float3 color = CalcSceneColorAndDepth(uv).rgb;
+    color *= result;
+
+    #if !FLASHLIGHT_NO_BLEND_FIX
+
+	// Add some minimum amount of light to very dark pixels.	
+    color = max(color, (result - 1.0) * 0.001);
+	
+    #endif
+
+    return float4(color, 1.0);
+}

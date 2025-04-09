@@ -1,5 +1,5 @@
-#include "FullScreenPassSceneViewExtension.h"
-#include "FullScreenPassShaders.h"
+#include "FlashlightSceneViewExtension.h"
+#include "FlashlightShaders.h"
 
 #include "FXRenderingUtils.h"
 #include "PostProcess/PostProcessInputs.h"
@@ -9,7 +9,7 @@
 static TAutoConsoleVariable<int32> CVarEnabled(
 	TEXT("r.FSP"),
 	1,
-	TEXT("Controls Full Screen Pass plugin\n")
+	TEXT("Controls FSP plugin\n")
 	TEXT(" 0: disabled\n")
 	TEXT(" 1: enabled (default)"));
 
@@ -18,14 +18,28 @@ static TAutoConsoleVariable<float> CVarEffectStrenght(
 	0.1f,
 	TEXT("Controls an amount of depth buffer blending to the base color."));
 
+static TAutoConsoleVariable<float> CVarSize(
+	TEXT("r.Flashlight.Size"),
+	420.0f,
+	TEXT("Flashlight size in pixels"));
 
-FFullScreenPassSceneViewExtension::FFullScreenPassSceneViewExtension(const FAutoRegister& AutoRegister) :
+static TAutoConsoleVariable<float> CVarBrightness(
+	TEXT("r.Flashlight.Brightness"),
+	10.0f,
+	TEXT("Flashlight brightness"));
+
+static TAutoConsoleVariable<float> CVarDistance(
+	TEXT("r.Flashlight.Distance"),
+	0.1f,
+	TEXT("Flashlight distance"));
+
+FFlashlightSceneViewExtension::FFlashlightSceneViewExtension(const FAutoRegister& AutoRegister) :
 	FSceneViewExtensionBase(AutoRegister)
 {
 
 }
 
-void FFullScreenPassSceneViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessingInputs& Inputs)
+void FFlashlightSceneViewExtension::PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& View, const FPostProcessingInputs& Inputs)
 {
 	if (CVarEnabled->GetInt() == 0)
 	{
@@ -51,23 +65,30 @@ void FFullScreenPassSceneViewExtension::PrePostProcessPass_RenderThread(FRDGBuil
 	FLinearColor ClearColor(0., 0., 0., 0.);
 	SceneColorDesc.ClearValue = FClearValueBinding(ClearColor);
 
-	FRDGTexture* ResultTexture = GraphBuilder.CreateTexture(SceneColorDesc, TEXT("FulllScreenPassResult"));
+	FRDGTexture* ResultTexture = GraphBuilder.CreateTexture(SceneColorDesc, TEXT("FlashlightResult"));
 	FScreenPassRenderTarget ResultRenderTarget = FScreenPassRenderTarget(ResultTexture, SceneColor.ViewRect, ERenderTargetLoadAction::EClear);
-	
-	FGlobalShaderMap* GlobalShaderMap = GetGlobalShaderMap(GMaxRHIFeatureLevel);
-	TShaderMapRef<FFullScreenPassVS> ScreenPassVS(GlobalShaderMap);
-	TShaderMapRef<FFullScreenPassPS> ScreenPassPS(GlobalShaderMap);
 
-	FFullScreenPassPS::FParameters* Parameters = GraphBuilder.AllocParameters<FFullScreenPassPS::FParameters>();
+	FGlobalShaderMap* GlobalShaderMap = GetGlobalShaderMap(GMaxRHIFeatureLevel);
+	TShaderMapRef<FFlashlightVS> ScreenPassVS(GlobalShaderMap);
+	TShaderMapRef<FFlashlightPS> ScreenPassPS(GlobalShaderMap);
+
+	FFlashlightPS::FParameters* Parameters = GraphBuilder.AllocParameters<FFlashlightPS::FParameters>();
 	Parameters->View = View.ViewUniformBuffer;
 	Parameters->SceneTexturesStruct = Inputs.SceneTextures;
 	Parameters->Strenght = CVarEffectStrenght->GetFloat();
+	Parameters->Brightness = CVarBrightness->GetFloat();
+	Parameters->Size = CVarSize->GetFloat();
+	Parameters->Color = FVector3f(1.0f, 0.9f, 0.78f);
+	Parameters->Distance = CVarDistance->GetFloat();
+	Parameters->UseDepth = 1;
+	Parameters->UseTexture = 1;
+	Parameters->UseBlendFix = 1;
 
 	Parameters->RenderTargets[0] = ResultRenderTarget.GetRenderTargetBinding();
 
 	AddDrawScreenPass(
 		GraphBuilder,
-		RDG_EVENT_NAME("FullScreenPassShader"),
+		RDG_EVENT_NAME("FlashlightShader"),
 		View,
 		Viewport,
 		Viewport,

@@ -2,16 +2,16 @@
 
 using UnrealBuildTool;
 
-public class FullScreenPass : ModuleRules
+public class Flashlight : ModuleRules
 {
-	public FullScreenPass(ReadOnlyTargetRules Target) : base(Target)
+	public Flashlight(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
-			}
+            }
 			);
 				
 		
@@ -40,8 +40,8 @@ public class FullScreenPass : ModuleRules
 				"RHI",
 				"Renderer",
 				"Projects",
-				"RenderCore",
-			}
+				"RenderCore"
+            }
 			);
 		
 		
