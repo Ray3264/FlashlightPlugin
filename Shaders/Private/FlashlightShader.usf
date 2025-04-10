@@ -27,7 +27,7 @@ float4 MainPS(
     //FParameters Parameters
 	) : SV_Target0
 {
-    float uBrightness = 0.0000000000000001f; // 0 - 0.1 but 0.000000000000001f is also quit a lot
+    float uBrightness = 0.000000000000001f; // 0 - 0.1 but 0.000000000000001f is also quit a lot
     float uSize = 21.0; // 10 - 1000
     float uColor = float3(255, 230, 200) / 255.0; // float3(255, 230, 200) / 255.0;
     float uDistance = 0.5; // 0 - 1
